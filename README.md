@@ -31,9 +31,10 @@ https://github.com/rhammeran/licht-aus-nach-zeit-ohne-belegung-bewegung/blob/mai
 - Erkennt automatisch per Template (`area_entities()` + `device_class`), ob im Bereich
   überhaupt ein Bewegungsmelder bzw. Belegungssensor existiert. Fehlt einer der beiden
   Sensortypen komplett, wird die entsprechende Bedingung automatisch als erfüllt
-  gewertet – das Licht geht dann rein zeitbasiert nach der Wartezeit aus. Damit sind
-  die `no_motion`/`no_occupancy`-Inputs nur noch als manueller Override nötig, nicht
-  mehr als Pflichtangabe pro Raum.
+  gewertet – das Licht geht dann rein zeitbasiert nach der Wartezeit aus. Die
+  `no_motion`/`no_occupancy`-Inputs musst du deshalb im Normalfall gar nicht setzen;
+  sie dienen nur dazu, diese automatische Erkennung bei Bedarf manuell zu überschreiben
+  (siehe Inputs-Tabelle oben).
 
 ## Lizenz
 
