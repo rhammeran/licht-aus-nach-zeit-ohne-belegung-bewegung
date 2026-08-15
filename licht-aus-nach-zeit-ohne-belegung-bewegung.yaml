@@ -1,0 +1,117 @@
+blueprint:
+  name: Licht nach Zeit ohne Belegung oder Bewegung ausschalten
+  description: Schaltet Licht in einem Bereich aus, wenn dort für eine einstellbare Zeit weder Belegung noch Bewegung erkannt wurde. Prüft zusätzlich nach Home-Assistant-Neustart.
+  domain: automation
+  source_url: https://github.com/rhammeran/licht-aus-nach-zeit-ohne-belegung-bewegung/blob/main/licht-aus-nach-zeit-ohne-belegung-bewegung.yaml
+  input:
+    target_area:
+      name: Raum / Bereich
+      description: Bereich, in dem Licht, Belegung und Bewegung geprüft werden sollen.
+      selector:
+        area: {}
+
+    timeout:
+      name: Wartezeit
+      description: Zeit, nach der bei fehlender Belegung und Bewegung das Licht ausgeschaltet wird.
+      default:
+        hours: 0
+        minutes: 5
+        seconds: 0
+      selector:
+        duration: {}
+
+    no_motion:
+      name: Kein Bewegungsmelder verwenden
+      description: Aktivieren, um den Bewegungsmelder im Bereich bei dieser Prüfung zu ignorieren – z. B. wenn er zwar vorhanden, aber unzuverlässig oder defekt ist. Fehlt im Bereich ganz ein Bewegungsmelder, erkennt die Blueprint das automatisch; dieser Schalter ist dann nicht nötig.
+      default: false
+      selector:
+        boolean: {}
+
+    no_occupancy:
+      name: Keinen Belegungssensor verwenden
+      description: Aktivieren, um den Belegungssensor im Bereich bei dieser Prüfung zu ignorieren – z. B. wenn er zwar vorhanden, aber unzuverlässig oder defekt ist. Fehlt im Bereich ganz ein Belegungssensor, erkennt die Blueprint das automatisch; dieser Schalter ist dann nicht nötig.
+      default: false
+      selector:
+        boolean: {}
+
+variables:
+  target_area: !input target_area
+  no_motion_override: !input no_motion
+  no_occupancy_override: !input no_occupancy
+  no_motion: "{{ no_motion_override or (area_entities(target_area) | select('is_state_attr', 'device_class', 'motion') | list | count == 0) }}"
+  no_occupancy: "{{ no_occupancy_override or (area_entities(target_area) | select('is_state_attr', 'device_class', 'occupancy') | list | count == 0) }}"
+
+triggers:
+  - trigger: light.turned_on
+    target:
+      area_id: !input target_area
+    options:
+      behavior: each
+      for: !input timeout
+
+  - trigger: occupancy.cleared
+    target:
+      area_id: !input target_area
+    options:
+      behavior: each
+      for: !input timeout
+
+  - trigger: motion.cleared
+    target:
+      area_id: !input target_area
+    options:
+      behavior: each
+      for: !input timeout
+
+  - trigger: homeassistant
+    event: start
+    id: Neustart
+
+conditions: []
+
+actions:
+  - if:
+      - condition: trigger
+        id:
+          - Neustart
+    then:
+      - delay: !input timeout
+
+  - if:
+      - condition: light.is_on
+        target:
+          area_id: !input target_area
+        options:
+          behavior: any
+
+      - condition: or
+        conditions:
+          - condition: template
+            value_template: "{{ no_occupancy }}"
+
+          - condition: occupancy.is_not_detected
+            target:
+              area_id: !input target_area
+            options:
+              behavior: all
+              for: !input timeout
+
+      - condition: or
+        conditions:
+          - condition: template
+            value_template: "{{ no_motion }}"
+
+          - condition: motion.is_not_detected
+            target:
+              area_id: !input target_area
+            options:
+              behavior: all
+              for: !input timeout
+
+    then:
+      - action: light.turn_off
+        target:
+          area_id: !input target_area
+        data: {}
+
+mode: restart
