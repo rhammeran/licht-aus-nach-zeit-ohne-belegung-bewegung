@@ -35,6 +35,10 @@ https://github.com/rhammeran/licht-aus-nach-zeit-ohne-belegung-bewegung/blob/mai
   die `no_motion`/`no_occupancy`-Inputs nur noch als manueller Override nötig, nicht
   mehr als Pflichtangabe pro Raum.
 
+## Lizenz
+
+[MIT](LICENSE)
+
 ## Changelog
 
 - **2026-08-15**: Automatische Erkennung fehlender Sensortypen per Template ergänzt
