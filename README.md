@@ -46,3 +46,6 @@ https://github.com/rhammeran/licht-aus-nach-zeit-ohne-belegung-bewegung/blob/mai
   (Root-Cause-Fix für stumm hängen bleibende Lichter in Räumen ohne Motion- oder
   Occupancy-Sensor). `no_motion`/`no_occupancy` sind seitdem optionale Overrides statt
   Pflicht-Schalter.
+- **2026-08-15**: Input-Namen/-Beschreibungen präzisiert: „Kein Bewegungsmelder
+  vorhanden" → „Kein Bewegungsmelder verwenden" (analog Belegung), da die Inputs
+  jetzt einen bewussten Override beschreiben statt eines Hardware-Fakts.
