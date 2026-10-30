@@ -1,6 +1,6 @@
 blueprint:
   name: Licht nach Zeit ohne Belegung oder Bewegung ausschalten
-  description: Schaltet Licht in einem Bereich aus, wenn dort für eine einstellbare Zeit weder Belegung noch Bewegung erkannt wurde. Prüft zusätzlich nach Home-Assistant-Neustart.
+  description: Schaltet Licht in einem Bereich aus, wenn dort für eine einstellbare Zeit weder Belegung noch Bewegung erkannt wurde. Optional werden Melder in Nachbarbereichen (z. B. Flur) geprüft – meldet einer davon gerade Bewegung oder Belegung, bleibt das Licht an, bis er frei ist. Prüft zusätzlich nach Home-Assistant-Neustart.
   domain: automation
   source_url: https://github.com/rhammeran/licht-aus-nach-zeit-ohne-belegung-bewegung/blob/main/licht-aus-nach-zeit-ohne-belegung-bewegung.yaml
   input:
@@ -34,6 +34,19 @@ blueprint:
       selector:
         boolean: {}
 
+    neighbor_sensors:
+      name: Melder in Nachbarbereichen (optional)
+      description: Bewegungs- oder Belegungsmelder z. B. im Flur. Meldet einer davon gerade Bewegung oder Belegung, wird das Licht nicht ausgeschaltet (es könnte gerade jemand auf dem Weg in den Raum sein). Sobald er frei meldet, wird sofort nach den normalen Bedingungen geprüft – ohne erneute Wartezeit. Leer lassen, um nur den Bereich selbst zu prüfen.
+      default: []
+      selector:
+        entity:
+          multiple: true
+          filter:
+            - domain: binary_sensor
+              device_class:
+                - motion
+                - occupancy
+
 variables:
   target_area: !input target_area
   no_motion_override: !input no_motion
@@ -62,6 +75,25 @@ triggers:
     options:
       behavior: each
       for: !input timeout
+
+  # Nachbarmelder frei: sofort neu pruefen. Der Bereich selbst steht nur mit
+  # im Target, weil ein Trigger-Target nicht leer sein darf; dessen Meldungen
+  # ohne Wartezeit scheitern an den for-Bedingungen unten.
+  - trigger: motion.cleared
+    id: Nachbar
+    target:
+      area_id: !input target_area
+      entity_id: !input neighbor_sensors
+    options:
+      behavior: each
+
+  - trigger: occupancy.cleared
+    id: Nachbar
+    target:
+      area_id: !input target_area
+      entity_id: !input neighbor_sensors
+    options:
+      behavior: each
 
   - trigger: homeassistant
     event: start
@@ -107,6 +139,19 @@ actions:
             options:
               behavior: all
               for: !input timeout
+
+      # Nachbarmelder (z. B. Flur) muessen gerade frei sein; leere Liste = immer erfuellt
+      - condition: motion.is_not_detected
+        target:
+          entity_id: !input neighbor_sensors
+        options:
+          behavior: all
+
+      - condition: occupancy.is_not_detected
+        target:
+          entity_id: !input neighbor_sensors
+        options:
+          behavior: all
 
     then:
       - action: light.turn_off

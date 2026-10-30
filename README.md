@@ -2,7 +2,8 @@
 
 Home-Assistant-Blueprint (Domain `automation`), die Licht in einem Bereich automatisch
 ausschaltet, wenn dort für eine einstellbare Wartezeit weder Belegung noch Bewegung
-erkannt wurde. Prüft zusätzlich nach jedem Home-Assistant-Neustart.
+erkannt wurde. Optional werden Melder in Nachbarbereichen (z. B. Flur) mitgeprüft.
+Prüft zusätzlich nach jedem Home-Assistant-Neustart.
 
 ## Installation
 
@@ -21,6 +22,7 @@ https://github.com/rhammeran/licht-aus-nach-zeit-ohne-belegung-bewegung/blob/mai
 | `timeout` | nein (Default 5 min) | Wartezeit ohne Belegung/Bewegung, nach der das Licht ausgeht. |
 | `no_motion` | nein (Default aus) | Manueller Override: Bewegungsmelder bei der Prüfung ignorieren (z. B. defekter Sensor). Fehlt im Bereich ganz ein Bewegungsmelder, wird das automatisch erkannt – der Schalter ist dann nicht nötig. |
 | `no_occupancy` | nein (Default aus) | Manueller Override: Belegungssensor bei der Prüfung ignorieren (z. B. defekter Sensor). Fehlt im Bereich ganz ein Belegungssensor, wird das automatisch erkannt – der Schalter ist dann nicht nötig. |
+| `neighbor_sensors` | nein (Default leer) | Bewegungs-/Belegungsmelder in Nachbarbereichen, z. B. im Flur. Meldet einer davon gerade Bewegung oder Belegung, bleibt das Licht an (es könnte jemand auf dem Weg in den Raum sein). |
 
 ## Funktionsweise
 
@@ -35,6 +37,12 @@ https://github.com/rhammeran/licht-aus-nach-zeit-ohne-belegung-bewegung/blob/mai
   `no_motion`/`no_occupancy`-Inputs musst du deshalb im Normalfall gar nicht setzen;
   sie dienen nur dazu, diese automatische Erkennung bei Bedarf manuell zu überschreiben
   (siehe Inputs-Tabelle oben).
+- Nachbarmelder (`neighbor_sensors`): Solange einer davon Bewegung oder Belegung meldet,
+  wird nicht ausgeschaltet. Meldet er frei, wird sofort nach den normalen Bedingungen
+  geprüft – ohne erneute Wartezeit. Leer gelassen, verhält sich die Blueprint wie zuvor.
+  Technischer Hinweis: Ein Trigger-Target darf in Home Assistant nicht leer sein, daher
+  steht im Nachbar-Trigger zusätzlich der eigene Bereich; dessen Meldungen ohne Wartezeit
+  scheitern an den Wartezeit-Bedingungen und schalten nichts.
 
 ## Lizenz
 
@@ -49,3 +57,6 @@ https://github.com/rhammeran/licht-aus-nach-zeit-ohne-belegung-bewegung/blob/mai
 - **2026-08-15**: Input-Namen/-Beschreibungen präzisiert: „Kein Bewegungsmelder
   vorhanden" → „Kein Bewegungsmelder verwenden" (analog Belegung), da die Inputs
   jetzt einen bewussten Override beschreiben statt eines Hardware-Fakts.
+- **2026-10-30**: Optionaler Input `neighbor_sensors` (Melder in Nachbarbereichen, z. B.
+  Flur): Licht bleibt an, solange dort Bewegung/Belegung erkannt wird; bei „frei“ wird
+  sofort geprüft. Ohne Eintrag unverändertes Verhalten.
