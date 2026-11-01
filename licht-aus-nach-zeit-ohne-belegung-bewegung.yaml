@@ -116,6 +116,21 @@ actions:
         options:
           behavior: any
 
+      # Nachbarmelder-Pruefung nur, wenn das Licht schon mindestens 2 Min an ist:
+      # Sonst schaltet ein frei meldender Flur ein gerade erst eingeschaltetes Licht
+      # sofort wieder aus, bevor der Raummelder die Person erkannt hat.
+      - condition: or
+        conditions:
+          - condition: not
+            conditions:
+              - condition: trigger
+                id:
+                  - Nachbar
+          - condition: template
+            value_template: >-
+              {% set ons = expand(area_entities(target_area)) | selectattr('domain', 'eq', 'light') | selectattr('state', 'eq', 'on') | list %}
+              {{ ons | length > 0 and (now() - (ons | map(attribute='last_changed') | max)).total_seconds() > 120 }}
+
       - condition: or
         conditions:
           - condition: template

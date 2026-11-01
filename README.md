@@ -60,3 +60,6 @@ https://github.com/rhammeran/licht-aus-nach-zeit-ohne-belegung-bewegung/blob/mai
 - **2026-10-30**: Optionaler Input `neighbor_sensors` (Melder in Nachbarbereichen, z. B.
   Flur): Licht bleibt an, solange dort Bewegung/Belegung erkannt wird; bei „frei“ wird
   sofort geprüft. Ohne Eintrag unverändertes Verhalten.
+- **2026-11-01**: Meldet ein Nachbarmelder „frei“, wird nur noch ausgeschaltet, wenn das
+  Licht seit mindestens 2 Minuten an ist. Verhindert, dass frisch eingeschaltetes Licht sofort
+  wieder ausgeht, bevor der Raummelder die Person erkannt hat.
