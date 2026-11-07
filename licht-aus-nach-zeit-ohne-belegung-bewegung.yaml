@@ -1,6 +1,6 @@
 blueprint:
   name: Licht nach Zeit ohne Belegung oder Bewegung ausschalten
-  description: Schaltet Licht in einem Bereich aus, wenn dort für eine einstellbare Zeit weder Belegung noch Bewegung erkannt wurde. Optional werden Melder in Nachbarbereichen (z. B. Flur) geprüft – meldet einer davon gerade Bewegung oder Belegung, bleibt das Licht an, bis er frei ist. Prüft zusätzlich nach Home-Assistant-Neustart.
+  description: Schaltet Licht in einem Bereich aus, wenn dort für eine einstellbare Zeit weder Belegung noch Bewegung erkannt wurde. Optional werden Melder in Nachbarbereichen (z. B. Flur) geprüft – meldet einer davon gerade Bewegung oder Belegung, bleibt das Licht an, bis er frei ist. Prüft zusätzlich nach Home-Assistant-Neustart und wenn ein Licht nach einem Geräte-Neustart (unavailable → on) wieder angeht.
   domain: automation
   source_url: https://github.com/rhammeran/licht-aus-nach-zeit-ohne-belegung-bewegung/blob/main/licht-aus-nach-zeit-ohne-belegung-bewegung.yaml
   input:
@@ -54,6 +54,10 @@ variables:
   no_motion: "{{ no_motion_override or (area_entities(target_area) | select('is_state_attr', 'device_class', 'motion') | list | count == 0) }}"
   no_occupancy: "{{ no_occupancy_override or (area_entities(target_area) | select('is_state_attr', 'device_class', 'occupancy') | list | count == 0) }}"
 
+# Fuer den Template-Trigger unten: Blueprint-variables stehen in Triggern nicht zur Verfuegung.
+trigger_variables:
+  target_area: !input target_area
+
 triggers:
   - trigger: light.turned_on
     target:
@@ -61,6 +65,15 @@ triggers:
     options:
       behavior: each
       for: !input timeout
+
+  # Licht kommt nach einem Geraete-Neustart (z. B. Stromausfall, Shelly mit
+  # initial_state match_input) per unavailable -> on zurueck: light.turned_on
+  # ueberspringt solche Wechsel, und ohne neues Melder-Ereignis liefe sonst nie
+  # ein Trigger. Der Template-Trigger wird wahr, sobald ein Licht im Bereich an ist.
+  - trigger: template
+    id: Wiederkehr
+    value_template: "{{ area_entities(target_area) | select('match', '^light[.]') | select('is_state', 'on') | list | count > 0 }}"
+    for: !input timeout
 
   - trigger: occupancy.cleared
     target:

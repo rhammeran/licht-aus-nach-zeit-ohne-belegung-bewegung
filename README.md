@@ -27,7 +27,9 @@ https://github.com/rhammeran/licht-aus-nach-zeit-ohne-belegung-bewegung/blob/mai
 ## Funktionsweise
 
 - Löst aus, wenn ein Licht im Bereich angeht, wenn Belegung/Bewegung endet, oder nach
-  einem Home-Assistant-Neustart.
+  einem Home-Assistant-Neustart. Zusätzlich löst ein Template-Trigger aus, sobald im Bereich
+  ein Licht an ist, auch wenn es nach einem Geräte-Neustart (z. B. Stromausfall, Wechsel
+  `unavailable` → `on`) wieder angeht; der Trigger `light.turned_on` überspringt solche Wechsel.
 - Schaltet das Licht nur aus, wenn es an ist **und** für die Wartezeit weder Belegung
   noch Bewegung im Bereich erkannt wurde.
 - Erkennt automatisch per Template (`area_entities()` + `device_class`), ob im Bereich
@@ -63,3 +65,7 @@ https://github.com/rhammeran/licht-aus-nach-zeit-ohne-belegung-bewegung/blob/mai
 - **2026-11-01**: Meldet ein Nachbarmelder „frei“, wird nur noch ausgeschaltet, wenn das
   Licht seit mindestens 2 Minuten an ist. Verhindert, dass frisch eingeschaltetes Licht sofort
   wieder ausgeht, bevor der Raummelder die Person erkannt hat.
+- **2026-11-07**: Neuer Template-Trigger (`id: Wiederkehr`, mit `trigger_variables`): Geht ein Licht
+  nach einem Geräte-Neustart (z. B. Stromausfall, Shelly mit „Schalter folgt Eingang“) von
+  `unavailable` auf `on` und kommt danach kein Melder-Ereignis mehr, wird es nach der Wartezeit
+  ausgeschaltet. Vorher blieb es an, weil `light.turned_on` Wechsel von `unavailable` überspringt.
